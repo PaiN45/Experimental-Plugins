@@ -54,7 +54,11 @@ function PLUGIN:LoadDefaultConfig()
   self.Config.Reward.Reward6 = "wood"
   self.Config.Reward.Reward6Amount = 50000
 end
-
+function PLUGIN:OnPluginUnloaded(plugin)
+eventpause:Destroy()
+eventstart:Destroy()
+runningman = nil
+end
 function PLUGIN:Startevent()
 	if (eventpause ~= nil) then
 		eventpause:Destroy()
