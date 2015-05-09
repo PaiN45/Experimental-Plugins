@@ -70,15 +70,12 @@ function PLUGIN:Startevent()
 	end
 	print(self.Config.Default.Count.." iz "..global.BasePlayer.activePlayerList.Count)
 	if (global.BasePlayer.activePlayerList.Count >= self.Config.Default.Count) then
-		enum = global.BasePlayer.activePlayerList:GetEnumerator()
-		local i = 0
-		local ArrayPlayers = {}
-			while enum:MoveNext() do
-		i = i+1;
-			ArrayPlayers[i] = enum.Current;
-		end
-		local rand_i = math.random(1,global.BasePlayer.activePlayerList.Count);
-		runningman = ArrayPlayers[rand_i]
+		local targetPlayer = global.BasePlayer.Find(arg[0])
+		runningman = targetPlayer
+		 if not targetPlayer then
+        rust.SendChatMessage(player, "Player not found!")
+        return
+    end
 		Runlog("Running man: "..runningman.displayName.."")
 		global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Running man: "..runningman.displayName..",\"")
 		--global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Бегущий человек: "..runningman.displayName..",\"")
@@ -146,15 +143,12 @@ function PLUGIN:ccmdEvent(args)
 		runningman = nil
 		Runlog("timer eventstart stoped")
 	end
-	local enum = global.BasePlayer.activePlayerList:GetEnumerator()
-	local i = 0
-	local ArrayPlayers = {}
-		while enum:MoveNext() do
-	i = i+1;
-		ArrayPlayers[i] = enum.Current;
-	end
-	local rand_i = math.random(1,global.BasePlayer.activePlayerList.Count);
-	runningman = ArrayPlayers[rand_i]
+		local targetPlayer = global.BasePlayer.Find(arg[0])
+		runningman = targetPlayer
+		 if not targetPlayer then
+        rust.SendChatMessage(player, "Player not found!")
+        return
+    end
 	Runlog("Running man: "..runningman.displayName.."")
 	global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Running man: "..runningman.displayName..",\"")
 	--global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Бегущий человек: "..runningman.displayName..",\"")
@@ -165,7 +159,7 @@ function PLUGIN:ccmdEvent(args)
 	time1 = time.GetUnixTimestamp()
 end
 
-function PLUGIN:cmdEvent(player, cmd, args)
+function PLUGIN:cmdEvent(player, cmd, arg)
 	if (player:GetComponent("BaseNetworkable").net.connection.authLevel >= self.Config.Default.authLevel) then
 		if (eventpause ~= nil) then
 			eventpause:Destroy()
@@ -179,15 +173,12 @@ function PLUGIN:cmdEvent(player, cmd, args)
 			runningman = nil
 			Runlog("timer eventstart stoped")
 		end
-		local enum = global.BasePlayer.activePlayerList:GetEnumerator()
-		local i = 0
-		local ArrayPlayers = {}
-			while enum:MoveNext() do
-		i = i+1;
-			ArrayPlayers[i] = enum.Current;
-		end
-		local rand_i = math.random(1,global.BasePlayer.activePlayerList.Count);
-		runningman = ArrayPlayers[rand_i]
+		local targetPlayer = global.BasePlayer.Find(arg[0])
+		runningman = targetPlayer
+		 if not targetPlayer then
+        rust.SendChatMessage(player, "Player not found!")
+        return
+    end
 		Runlog("Running man: "..runningman.displayName.."")
 		global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Running man: "..runningman.displayName..",\"")
 		--global.ConsoleSystem.Broadcast("chat.add \""..self.Config.Default.ChatName.."\" \"Бегущий человек: "..runningman.displayName..",\"")
