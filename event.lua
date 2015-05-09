@@ -231,7 +231,6 @@ function PLUGIN:cmdRun(player, cmd, args)
 		rust.SendChatMessage(player, self.Config.Default.ChatName, "Kill him and get the reward!")
 		time2 = time.GetUnixTimestamp()
 		local time3 = time2 - time1
-		time3 = eventstart.Delay - time3
 		time3 = math.floor(time3 / 60)
 		--rust.SendChatMessage(player, self.Config.Default.ChatName, "До конца эвента осталось: "..time3.." минут")
 		rust.SendChatMessage(player, self.Config.Default.ChatName, "Until the end of event left: "..time3.." minutes")
