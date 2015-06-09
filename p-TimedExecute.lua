@@ -1,73 +1,84 @@
 PLUGIN.Title = "PaiN TimedExecute"
 PLUGIN.Description = "Execute commands every (x) seconds."
 PLUGIN.Author = "PaiN"
-PLUGIN.Version = V(1, 5, 0)
+PLUGIN.Version = V(2, 0, 0)
 PLUGIN.ResourceId = 919
 
 function PLUGIN:LoadDefaultConfig()
-    self.Config.ShowTimedCommands = "true" 
-	self.Config.TimerOnceCommands = { 
-{"say 'Restart in 1 MINUTE!'",60}, 
-{"say 'Restart in 30 Seconds!'",90}, 
-{"restart",120},
-{"reset.oncetimer",121},
-}
-    self.Config.RepeatTimedCommands = { 
-{"server.save",300},
-{"say 'hello world'",5},
-}
+    self.Config.EnableTimerOnceCommands = self.Config.EnableTimerOnceCommands or "true"
+	self.Config.EnableTimerRepeatCommands = self.Config.EnableTimerRepeatCommands or "true"
+    self.Config.RepeaterCommands = self.Config.RepeaterCommands or { 
+        { command = "server.save", seconds = 300 },
+        { command = "say 'hello world'", seconds = 60 }
+    }
+	self.Config.OnceCommands = self.Config.OnceCommands or {
+        { command = "say 'Restart in 1 minute'", seconds = 60 },
+        { command = "say 'Restart in 30 seconds'", seconds = 90 },
+		{ command = "say 'Restart NOW'", seconds = 120 },
+		{ command = "restart", seconds = 120 },
+		{ command = "reset.oncetimer", seconds = 121 }
+    }
 self:SaveConfig()
-end
- 
-function PLUGIN:OnServerInitialized()
-    self:RepeaterTimedCommands()
-	self:OnceTimedCommands()
 end
 
 function PLUGIN:Init()
+if self.Config.EnableTimerOnceCommands == "true" then
+print("[" .. self.Title .. "] Timer-Once is ON ")
+else
+print("[" .. self.Title .. "] Timer-Once is OFF")
+end
+if self.Config.EnableTimerRepeatCommands == "true" then
+print("[" .. self.Title .. "] Timer-Repeat is ON ")
+else
+print("[" .. self.Title .. "] Timer-Repeat is OFF")
+end
 command.AddConsoleCommand("reset.oncetimer", self.Plugin, "cmdResetOnceTimer")
-command.AddConsoleCommand("reset.repeatertimer", self.Plugin, "cmdResetRepeaterTimer")
-permission.RegisterPermission("canrestimers", self.Plugin)
-     self.timers = {}
-	 self.timer = {}
+self:LoadDefaultConfig()
+	 self.repeattimer = {}
+	 self.oncetimer = {}
+	self:RepeaterTimedCommands()
+	self:OnceTimedCommands()
 end
 
 function PLUGIN:Unload()
-self:ResetTimers()
+    self:ResetRepeatTimer()
+	self:ResetOnceTimer()
 end
 
+function PLUGIN:ResetRepeatTimer()
+for i, item in ipairs(self.repeattimer) do
+self.repeattimer[i]:Destroy()
+	end
+end
+function PLUGIN:ResetOnceTimer()
+for i, item in ipairs(self.oncetimer) do
+self.oncetimer[i]:Destroy()
+	end
+end
 function PLUGIN:cmdResetOnceTimer()
 self:OnceTimedCommands()
 end
-function PLUGIN:cmdResetRepeaterTimer()
-self:RepeaterTimedCommands()
-end
-
-function PLUGIN:ResetTimers()
-for k,v in pairs(self.timers) do
-self.timers[k]:Destroy()
-end
-for k,v in pairs(self.timer) do
-self.timer[k]:Destroy()
-	end
-end
 
 function PLUGIN:RepeaterTimedCommands()
-    self:ResetTimers()
-for k,v in pairs(self.Config.RepeatTimedCommands) do 
-self.timers[k] = timer.Repeat(v[2], 0, function()
-    print("[" .. self.Title .. "] Ran command: " .. v[1])
-        rust.RunServerCommand(v[1])
-		end, self.Plugin)
-		end
-	end
-	
+if self.Config.EnableTimerRepeatCommands == "true" then
+self:ResetRepeatTimer()
+for i, item in ipairs(self.Config.RepeaterCommands) do
+self.repeattimer[i] = timer.Repeat(item.seconds, 0, function()
+            print("[" .. self.Title .. "] Ran command: " .. item.command)
+            rust.RunServerCommand(item.command)
+        end, self.Plugin)
+    end
+end
+end
+
 function PLUGIN:OnceTimedCommands()
-	self:ResetTimers()
-for k,v in pairs(self.Config.TimerOnceCommands) do 
-self.timer[k] = timer.Once(v[2], function ()
-	print("[" .. self.Title .. "] Ran command: " .. v[1])
-        rust.RunServerCommand(v[1])
-    end, self.Plugin)
-	end
+if self.Config.EnableTimerOnceCommands == "true" then
+	self:ResetOnceTimer()
+for i, item in ipairs(self.Config.OnceCommands) do
+self.oncetimer[i] = timer.Once(item.seconds, function ()
+            print("[" .. self.Title .. "] Ran command: " .. item.command)
+            rust.RunServerCommand(item.command)
+        end, self.Plugin)
+    end
+end
 end
