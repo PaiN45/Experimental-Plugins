@@ -1,70 +1,135 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System;
+using System.Linq;
 using System.Data;
 using UnityEngine;
 using Oxide.Core;
 
 namespace Oxide.Plugins
 {
-    [Info("Mind Freeze", "PaiN", "1.2.0", ResourceId = 1198)]
+    [Info("Mind Freeze", "PaiN", "2.0.0", ResourceId = 1198)]
     [Description("Allows you to freeze players with a legit way.")]
     class MindFreeze : RustPlugin
     {
-		
+        private Timer _timer;
+
+        private class FrozenPlayerInfo
+        {
+            public BasePlayer Player { get; set; }
+            public Vector3 FrozenPosition { get; set; }
+
+            public FrozenPlayerInfo(BasePlayer player)
+            {
+                Player = player;
+                FrozenPosition = player.transform.position;
+            }
+        }
+
+        List<FrozenPlayerInfo> frozenPlayers = new List<FrozenPlayerInfo>();
+
         void Loaded()
         {
-        if (!permission.PermissionExists("canmindfreeze")) permission.RegisterPermission("canmindfreeze", this);
+            if (!permission.PermissionExists("canmindfreeze")) permission.RegisterPermission("canmindfreeze", this);
             //LoadDefaultConfig(); Maybe gonna add this later.
+            _timer= timer.Every(1, OnTimer);
         }
-           
-       List<BasePlayer> frozenPlayers = new List<BasePlayer>();  
-		   
-        private Timer timerrepeat;
-       
+
         [ChatCommand("freeze")]
-		void cmdFreeze(BasePlayer player, string cmd, string[] args)
+        void cmdFreeze(BasePlayer player, string cmd, string[] args)
         {
 			var target = BasePlayer.Find(args[0]);
-			frozenPlayers.Add(target);
-			if (frozenPlayers.Contains(target)) 
+			string steamId = Convert.ToString(player.userID);
+			if (args.Length == 1)
 			{
-                var position = target.transform.position;
-                var configPos = new Vector3(position.x, position.y , position.z);
+				if (!permission.UserHasPermission(steamId, "canmindfreeze"))
+				{
+					SendReply(player, "No Permission!");
+					return;
+				}
 
-                if(Vector3.Distance(target.transform.position, configPos) < 1)
-                {
-                var timerrepeat = timer.Repeat(1, 0, () => target.ClientRPCPlayer(null, target, "ForcePositionTo", new object[] { configPos }));
-                target.TransformChanged();
-
-                }
+				
+				if (!target)
+				{
+					SendReply(player, "Player not found!");
+					return;
+				}				
+				if (target == null) return; // player in arg not found in player list
+				if (frozenPlayers.Any(t => t.Player == target)) return; // already in frozen list
+				frozenPlayers.Add(new FrozenPlayerInfo(target));
+				SendReply(target, "You have been frozen by " + player.displayName);
+				SendReply(player, "You have frozen " + target.displayName);
 			}
+			else
+				{
+					SendReply(player, "Syntax: /freeze \"player\" ");
+					return;
+				}
 		}
-  
 		
+		
+
         [ChatCommand("unfreeze")]
-        void cmdUnFreeze(BasePlayer player, string command, string[] args)
+        void cmdUnFreeze(BasePlayer player, string cmd, string[] args)
         {
 			var target = BasePlayer.Find(args[0]);
-			if (frozenPlayers.Contains(target)) 
+			string steamId = Convert.ToString(player.userID);
+			if (args.Length == 1)
 			{
-				frozenPlayers.Remove(target);
+				if (!permission.UserHasPermission(steamId, "canmindfreeze"))
+				{
+				SendReply(player, "No Permission!");
+				return;
+				}
+				
+				
+				if (!target)
+				{
+				SendReply(player, "Player not found!");
+				return;
+				}
+				
+				
+				if (target == null) return; // player in arg not found in player list
+				frozenPlayers.RemoveAll(t => t.Player == target);
+				SendReply(target, "You have been unfrozen by " + player.displayName);
+				SendReply(player, "You have unfrozen " + target.displayName);
 			}
-					
-        }
-		
-		[ChatCommand("unfreezeall")]
-		void cmdUnFreezeAll(BasePlayer player, string command, string[] args)
-		{
-			frozenPlayers.Clear();		
+				else
+				{
+					SendReply(player, "Syntax: /unfreeze \"player\" ");
+					return;
+				}	
 		}
-       
-       
-        public void Unloaded()
+
+        [ChatCommand("unfreezeall")]
+        void cmdUnFreezeAll(BasePlayer player, string cmd, string[] args)
         {
-            timerrepeat.Destroy(); 
-			frozenPlayers.Clear();
+			string steamId = Convert.ToString(player.userID);
+			if (permission.UserHasPermission(steamId, "canmindfreeze"))
+			{
+            frozenPlayers.Clear();
+			}
+			else
+			{
+				SendReply(player, "No Permission!");
+			}
+        }
+
+        void OnTimer()
+        {
+            foreach (FrozenPlayerInfo current in frozenPlayers)
+            {
+                if (Vector3.Distance(current.Player.transform.position, current.FrozenPosition) < 1) continue; // if distance < 1, player is still about where we froze him, continue skips to next player
+                current.Player.ClientRPCPlayer(null, current.Player, "ForcePositionTo", new object[] { current.FrozenPosition });
+                current.Player.TransformChanged();
+            }
+        }
+
+        void Unloaded()
+        {
+            _timer.Destroy();
+            frozenPlayers.Clear();
         }
     }
-
 }
