@@ -46,7 +46,7 @@ namespace Oxide.Plugins
 									""type"":""UnityEngine.UI.RawImage"",
 									""imagetype"": ""Tiled"",
 									""color"": ""1.0 1.0 1.0 1.0"",
-									""url"": ""http://www.pstut.info/wp-content/uploads/2007/11/rfirst.jpg"",
+									""url"": ""http://www.wallspick.com/wp-content/uploads/2014/03/Black-background-set-wood-on-chanconsultants-jpg-728x455.jpg"",
 								},
                                 {
                                     ""type"":""RectTransform"",
